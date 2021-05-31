@@ -84,6 +84,11 @@ function title_date(sec, offset) {
   return date + " " + time;
 }
 
+function date_convert(sec, offset) {
+  let date = new Date((sec + offset) * 1000);
+  return String(Number(date.getMonth()) + 1) + "/" + date.getDate();
+}
+
 module.exports = {
 	name: 'weather',
 	description: 'Weather',
@@ -99,18 +104,17 @@ module.exports = {
 
       sendGetRequest_2(response.coord.lat, response.coord.lon) 
       .then((response) => {
-        console.log(response.alerts);
         let alerts = "";
         if(typeof response.alerts == "undefined") {
           alerts = "None";
         } else {
-        for(let i = 0; i < response.alerts.length; i++) {
-          alerts += response.alerts[i].sender_name + ": " + response.alerts[i].event;
-        }
+          for(let i = 0; i < response.alerts.length; i++) {
+            alerts += response.alerts[i].sender_name + ": " + response.alerts[i].event + " (" + date_convert(response.alerts[i].start, response.timezone_offset) + " - " + date_convert(response.alerts[i].end, response.timezone_offset) + ")\n";
+          }
         }
         let day = new Date((response.daily[1].dt + response.timezone_offset) * 1000).getDay();
         result.addFields({name: days_of_the_week[day%7], value: `**Min:** ${temp_convert(response.daily[1].temp.min)}\n**Max:** ${temp_convert(response.daily[1].temp.max)}`, inline: true}, {name: days_of_the_week[(day+1)%7], value: `**Min:** ${temp_convert(response.daily[2].temp.min)}\n**Max:** ${temp_convert(response.daily[2].temp.max)}`, inline: true}, {name: days_of_the_week[(day+2)%7], value: `**Min:** ${temp_convert(response.daily[3].temp.min)}\n**Max:** ${temp_convert(response.daily[3].temp.max)}`, inline: true}, {name: days_of_the_week[(day+3)%7], value: `**Min:** ${temp_convert(response.daily[4].temp.min)}\n**Max:** ${temp_convert(response.daily[4].temp.max)}`, inline: true}, {name: days_of_the_week[(day+4)%7], value: `**Min:** ${temp_convert(response.daily[5].temp.min)}\n**Max:** ${temp_convert(response.daily[5].temp.max)}`, inline: true}, {name: "Alerts", value: 
-       alerts});
+       `${alerts}`});
 
         result.setColor("#4287f5");
         message.channel.send(result);
